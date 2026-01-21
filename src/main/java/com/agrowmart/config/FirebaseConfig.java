@@ -1,12 +1,12 @@
-
 package com.agrowmart.config;
 
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.firebase.FirebaseApp;
 import com.google.firebase.FirebaseOptions;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.core.io.ClassPathResource;
+
 import javax.annotation.PostConstruct;
+import java.io.ByteArrayInputStream;
 
 @Configuration
 public class FirebaseConfig {
@@ -14,13 +14,13 @@ public class FirebaseConfig {
     @PostConstruct
     public void initialize() {
         try {
-            var resource = new ClassPathResource("serviceAccountKey.json");
-            System.out.println("Trying to load: " + resource.getURL());
-            System.out.println("File exists: " + resource.exists());
-            System.out.println("File size: " + resource.contentLength() + " bytes");
+            String json = System.getenv("FIREBASE_CREDENTIALS_JSON");
+            if (json == null || json.isEmpty()) {
+                throw new RuntimeException("Firebase credentials not set in environment!");
+            }
 
             FirebaseOptions options = FirebaseOptions.builder()
-                    .setCredentials(GoogleCredentials.fromStream(resource.getInputStream()))
+                    .setCredentials(GoogleCredentials.fromStream(new ByteArrayInputStream(json.getBytes())))
                     .build();
 
             if (FirebaseApp.getApps().isEmpty()) {
@@ -29,7 +29,7 @@ public class FirebaseConfig {
             }
         } catch (Exception e) {
             e.printStackTrace();
-            throw new RuntimeException("Firebase load failed – check file!", e);
+            throw new RuntimeException("Firebase load failed – check environment variable!", e);
         }
     }
 }
