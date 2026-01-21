@@ -667,7 +667,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-@Service
+@Service 
 public class AuthService {
     private final UserRepository userRepo;
     private final RoleRepository roleRepo;
