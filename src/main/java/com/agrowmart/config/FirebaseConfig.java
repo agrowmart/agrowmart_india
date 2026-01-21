@@ -8,6 +8,7 @@ import org.springframework.context.annotation.Configuration;
 import javax.annotation.PostConstruct;
 import java.io.ByteArrayInputStream;
 import java.nio.charset.StandardCharsets;
+import java.util.Base64;
 
 @Configuration
 public class FirebaseConfig {
@@ -15,25 +16,24 @@ public class FirebaseConfig {
     @PostConstruct
     public void initialize() {
         try {
-            // Read Firebase JSON from ENV variable
-            String firebaseJson = System.getenv("FIREBASE_CREDENTIALS_JSON");
+            String base64 = System.getenv("FIREBASE_CREDENTIALS_BASE64");
 
-            if (firebaseJson == null || firebaseJson.isEmpty()) {
-                System.out.println("Firebase disabled: FIREBASE_CREDENTIALS_JSON not found");
-                return; // ✅ Do NOT crash app
+            if (base64 == null || base64.isEmpty()) {
+                System.out.println("Firebase disabled: no credentials");
+                return;
             }
 
+            byte[] decoded = Base64.getDecoder().decode(base64);
+            ByteArrayInputStream stream =
+                    new ByteArrayInputStream(decoded);
+
             FirebaseOptions options = FirebaseOptions.builder()
-                    .setCredentials(
-                            GoogleCredentials.fromStream(
-                                    new ByteArrayInputStream(firebaseJson.getBytes(StandardCharsets.UTF_8))
-                            )
-                    )
+                    .setCredentials(GoogleCredentials.fromStream(stream))
                     .build();
 
             if (FirebaseApp.getApps().isEmpty()) {
                 FirebaseApp.initializeApp(options);
-                System.out.println("✅ Firebase initialized successfully");
+                System.out.println("✅ Firebase initialized");
             }
 
         } catch (Exception e) {
